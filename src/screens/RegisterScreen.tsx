@@ -59,7 +59,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.emoji}>🎯</Text>
+            <Text style={styles.emoji} allowFontScaling={false}>🎯</Text>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Start building better habits today
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 60,
     marginBottom: 16,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   title: {
     fontSize: 28,

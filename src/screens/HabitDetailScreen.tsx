@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Loading, Button } from '../components';
 import { useCompletions } from '../hooks/useCompletions';
@@ -87,12 +88,12 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.icon}>{habit.icon}</Text>
+          <Text style={styles.icon} allowFontScaling={false}>{habit.icon}</Text>
           <Text style={styles.title}>{habit.name}</Text>
         </View>
 
         <View style={styles.streakCard}>
-          <Text style={styles.streakEmoji}>🔥</Text>
+          <Text style={styles.streakEmoji} allowFontScaling={false}>🔥</Text>
           <Text style={styles.streakNumber}>{streak.currentStreak}</Text>
           <Text style={styles.streakLabel}>Day Streak</Text>
         </View>
@@ -173,6 +174,7 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 64,
     marginBottom: 12,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   title: {
     fontSize: 24,
@@ -194,6 +196,7 @@ const styles = StyleSheet.create({
   streakEmoji: {
     fontSize: 48,
     marginBottom: 12,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   streakNumber: {
     fontSize: 48,

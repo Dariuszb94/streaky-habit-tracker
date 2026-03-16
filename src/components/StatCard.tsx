@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 
 interface StatCardProps {
   icon: string;
@@ -16,7 +16,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <View style={[styles.card, { borderLeftColor: color }]}>
-      <Text style={styles.icon}>{icon}</Text>
+      <Text style={styles.icon} allowFontScaling={false}>{icon}</Text>
       <View style={styles.content}>
         <Text style={styles.label}>{label}</Text>
         <Text style={[styles.value, { color }]}>{value}</Text>
@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 32,
     marginRight: 16,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   content: {
     flex: 1,

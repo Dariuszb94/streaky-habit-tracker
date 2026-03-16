@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Platform } from 'react-native';
 import { StatCard, Loading } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { useStats } from '../hooks/useStats';
@@ -120,7 +120,7 @@ export const StatsScreen: React.FC<StatsScreenProps> = () => {
         </View>
 
         <View style={styles.motivationCard}>
-          <Text style={styles.motivationEmoji}>💪</Text>
+          <Text style={styles.motivationEmoji} allowFontScaling={false}>💪</Text>
           <Text style={styles.motivationText}>
             {weeklyCompletionRate >= 80
               ? "You're crushing it! Keep up the great work!"
@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
   motivationEmoji: {
     fontSize: 48,
     marginBottom: 12,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   motivationText: {
     fontSize: 16,

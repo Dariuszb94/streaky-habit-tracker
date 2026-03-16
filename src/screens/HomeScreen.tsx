@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   FlatList,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { HabitCard, ProgressBar, Loading } from '../components';
 import { useAuth } from '../hooks/useAuth';
@@ -85,7 +86,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       {habits.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🎯</Text>
+          <Text style={styles.emptyEmoji} allowFontScaling={false}>🎯</Text>
           <Text style={styles.emptyTitle}>No habits yet</Text>
           <Text style={styles.emptyText}>
             Tap the + button below to create your first habit
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
   emptyEmoji: {
     fontSize: 64,
     marginBottom: 16,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   emptyTitle: {
     fontSize: 20,

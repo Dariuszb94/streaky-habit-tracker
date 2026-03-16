@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  SafeAreaView,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../components';
 
 interface OnboardingScreenProps {
@@ -13,7 +21,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.emoji}>🔥</Text>
+          <Ionicons
+            name='flame'
+            size={80}
+            color='#FF6B35'
+            style={styles.emoji}
+          />
           <Text style={styles.title}>Welcome to Streaky</Text>
           <Text style={styles.subtitle}>
             Build lasting habits with daily streaks and gamification
@@ -22,19 +35,39 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
         <View style={styles.features}>
           <View style={styles.feature}>
-            <Text style={styles.featureIcon}>✓</Text>
+            <Ionicons
+              name='checkmark-circle'
+              size={32}
+              color='#4CAF50'
+              style={styles.featureIcon}
+            />
             <Text style={styles.featureText}>Track daily habits</Text>
           </View>
           <View style={styles.feature}>
-            <Text style={styles.featureIcon}>🔥</Text>
+            <Ionicons
+              name='flame'
+              size={32}
+              color='#FF6B35'
+              style={styles.featureIcon}
+            />
             <Text style={styles.featureText}>Build streaks</Text>
           </View>
           <View style={styles.feature}>
-            <Text style={styles.featureIcon}>⚡</Text>
+            <Ionicons
+              name='flash'
+              size={32}
+              color='#FFC107'
+              style={styles.featureIcon}
+            />
             <Text style={styles.featureText}>Earn XP and level up</Text>
           </View>
           <View style={styles.feature}>
-            <Text style={styles.featureIcon}>🎯</Text>
+            <Ionicons
+              name='flag'
+              size={32}
+              color='#2196F3'
+              style={styles.featureIcon}
+            />
             <Text style={styles.featureText}>Stay motivated</Text>
           </View>
         </View>
@@ -67,7 +100,6 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
   emoji: {
-    fontSize: 80,
     marginBottom: 20,
   },
   title: {
@@ -93,7 +125,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   featureIcon: {
-    fontSize: 28,
     marginRight: 16,
   },
   featureText: {

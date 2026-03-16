@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Habit } from '../types';
 
 interface HabitCardProps {
@@ -28,12 +28,12 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
       <View style={styles.content}>
         <View style={styles.habitInfo}>
-          <Text style={styles.icon}>{habit.icon}</Text>
+          <Text style={styles.icon} allowFontScaling={false}>{habit.icon}</Text>
           <Text style={styles.habitName}>{habit.name}</Text>
         </View>
 
         <View style={styles.streakContainer}>
-          <Text style={styles.streakEmoji}>🔥</Text>
+          <Text style={styles.streakEmoji} allowFontScaling={false}>🔥</Text>
           <Text style={styles.streakText}>{streak} day streak</Text>
         </View>
       </View>
@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 24,
     marginRight: 8,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   habitName: {
     fontSize: 16,
@@ -105,6 +106,7 @@ const styles = StyleSheet.create({
   streakEmoji: {
     fontSize: 16,
     marginRight: 4,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   streakText: {
     fontSize: 13,

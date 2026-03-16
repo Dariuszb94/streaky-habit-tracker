@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { StatCard, Button, Loading } from '../components';
 import { useAuth } from '../hooks/useAuth';
@@ -49,13 +50,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarEmoji}>👤</Text>
+            <Text style={styles.avatarEmoji} allowFontScaling={false}>👤</Text>
           </View>
           <Text style={styles.email}>{user?.email}</Text>
         </View>
 
         <View style={styles.levelCard}>
-          <Text style={styles.levelEmoji}>⭐</Text>
+          <Text style={styles.levelEmoji} allowFontScaling={false}>⭐</Text>
           <Text style={styles.levelNumber}>Level {stats?.level || 0}</Text>
           <Text style={styles.xpText}>{stats?.xp || 0} XP</Text>
         </View>
@@ -89,37 +90,37 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
           <Text style={styles.sectionTitle}>Milestones</Text>
           <View style={styles.milestonesGrid}>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.level || 0) >= 1 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>Level 1</Text>
             </View>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.level || 0) >= 5 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>Level 5</Text>
             </View>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.longestStreak || 0) >= 7 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>7-Day Streak</Text>
             </View>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.longestStreak || 0) >= 30 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>30-Day Streak</Text>
             </View>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.totalHabitsCompleted || 0) >= 100 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>100 Completions</Text>
             </View>
             <View style={styles.milestoneItem}>
-              <Text style={styles.milestoneEmoji}>
+              <Text style={styles.milestoneEmoji} allowFontScaling={false}>
                 {(stats?.level || 0) >= 10 ? '🏆' : '🔒'}
               </Text>
               <Text style={styles.milestoneText}>Level 10</Text>
@@ -183,6 +184,7 @@ const styles = StyleSheet.create({
   },
   avatarEmoji: {
     fontSize: 40,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   email: {
     fontSize: 16,
@@ -203,6 +205,7 @@ const styles = StyleSheet.create({
   levelEmoji: {
     fontSize: 48,
     marginBottom: 12,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   levelNumber: {
     fontSize: 32,
@@ -242,6 +245,7 @@ const styles = StyleSheet.create({
   milestoneEmoji: {
     fontSize: 32,
     marginBottom: 8,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   milestoneText: {
     fontSize: 11,

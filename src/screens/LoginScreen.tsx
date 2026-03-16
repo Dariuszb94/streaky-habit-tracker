@@ -43,7 +43,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.emoji}>🔥</Text>
+            <Text style={styles.emoji} allowFontScaling={false}>🔥</Text>
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Log in to continue your streaks</Text>
           </View>
@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 60,
     marginBottom: 16,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
   title: {
     fontSize: 28,

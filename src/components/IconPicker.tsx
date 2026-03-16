@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { HABIT_ICONS, HabitIcon } from '../types';
 
@@ -31,7 +32,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
               ]}
               onPress={() => onSelectIcon(icon)}
             >
-              <Text style={styles.icon}>{icon}</Text>
+              <Text style={styles.icon} allowFontScaling={false}>{icon}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -71,5 +72,6 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 28,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
   },
 });
