@@ -86,7 +86,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       {habits.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji} allowFontScaling={false}>🎯</Text>
+          <Text style={styles.emptyEmoji} allowFontScaling={false}>
+            🎯
+          </Text>
           <Text style={styles.emptyTitle}>No habits yet</Text>
           <Text style={styles.emptyText}>
             Tap the + button below to create your first habit

@@ -32,7 +32,9 @@ export const IconPicker: React.FC<IconPickerProps> = ({
               ]}
               onPress={() => onSelectIcon(icon)}
             >
-              <Text style={styles.icon} allowFontScaling={false}>{icon}</Text>
+              <Text style={styles.icon} allowFontScaling={false}>
+                {icon}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>

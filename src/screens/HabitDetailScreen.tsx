@@ -88,12 +88,16 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.icon} allowFontScaling={false}>{habit.icon}</Text>
+          <Text style={styles.icon} allowFontScaling={false}>
+            {habit.icon}
+          </Text>
           <Text style={styles.title}>{habit.name}</Text>
         </View>
 
         <View style={styles.streakCard}>
-          <Text style={styles.streakEmoji} allowFontScaling={false}>🔥</Text>
+          <Text style={styles.streakEmoji} allowFontScaling={false}>
+            🔥
+          </Text>
           <Text style={styles.streakNumber}>{streak.currentStreak}</Text>
           <Text style={styles.streakLabel}>Day Streak</Text>
         </View>

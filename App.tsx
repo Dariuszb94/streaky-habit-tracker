@@ -20,7 +20,7 @@ export default function App() {
         await Font.loadAsync({
           ...Ionicons.font,
         });
-        
+
         // Request notification permissions
         await requestNotificationPermissions();
       } catch (e) {

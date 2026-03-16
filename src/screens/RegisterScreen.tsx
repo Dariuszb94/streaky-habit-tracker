@@ -59,7 +59,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.emoji} allowFontScaling={false}>🎯</Text>
+            <Text style={styles.emoji} allowFontScaling={false}>
+              🎯
+            </Text>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Start building better habits today

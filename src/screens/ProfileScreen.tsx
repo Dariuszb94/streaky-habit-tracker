@@ -50,13 +50,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarEmoji} allowFontScaling={false}>👤</Text>
+            <Text style={styles.avatarEmoji} allowFontScaling={false}>
+              👤
+            </Text>
           </View>
           <Text style={styles.email}>{user?.email}</Text>
         </View>
 
         <View style={styles.levelCard}>
-          <Text style={styles.levelEmoji} allowFontScaling={false}>⭐</Text>
+          <Text style={styles.levelEmoji} allowFontScaling={false}>
+            ⭐
+          </Text>
           <Text style={styles.levelNumber}>Level {stats?.level || 0}</Text>
           <Text style={styles.xpText}>{stats?.xp || 0} XP</Text>
         </View>
