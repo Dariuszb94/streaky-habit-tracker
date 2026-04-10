@@ -9,6 +9,7 @@ import {
   Alert,
   TouchableOpacity,
   Platform,
+  Keyboard,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Button, IconPicker } from '../components';
@@ -44,6 +45,7 @@ export const AddHabitScreen: React.FC<AddHabitScreenProps> = ({
     }
 
     try {
+      Keyboard.dismiss();
       await createHabit({
         name: habitName.trim(),
         icon: selectedIcon,
@@ -84,6 +86,9 @@ export const AddHabitScreen: React.FC<AddHabitScreenProps> = ({
               onChangeText={setHabitName}
               placeholder='e.g., Drink 8 glasses of water'
               maxLength={50}
+              returnKeyType='done'
+              onSubmitEditing={handleCreate}
+              accessibilityLabel='Habit name input'
             />
           </View>
 

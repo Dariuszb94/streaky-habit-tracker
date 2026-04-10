@@ -11,22 +11,38 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  Keyboard,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { Button } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { resetPassword, signInWithGoogle } from '../services/authService';
+import { validateEmail, validatePassword } from '../utils/validation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../types';
 
 WebBrowser.maybeCompleteAuthSession();
 
+type LoginScreenNavigationProp = StackNavigationProp<
+  AuthStackParamList,
+  'Login'
+>;
+
 interface LoginScreenProps {
-  navigation: any;
+  navigation: LoginScreenNavigationProp;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
   const { login, loading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -54,20 +70,38 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     } catch (error: any) {
       Alert.alert(
         'Google Sign-In Failed',
-        error.message || 'Something went wrong',
+        error.message || 'Something went wrong'
       );
     } finally {
       setGoogleLoading(false);
     }
   };
 
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (emailError) {
+      setEmailError('');
+    }
+  };
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Validate inputs
+    const emailValidation = validateEmail(email);
+    const passwordValidation = validatePassword(password);
+
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error || '');
+      Alert.alert('Error', emailValidation.error || 'Invalid email');
+      return;
+    }
+
+    if (!passwordValidation.isValid) {
+      Alert.alert('Error', passwordValidation.error || 'Invalid password');
       return;
     }
 
     try {
+      Keyboard.dismiss();
       await login(email, password);
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
@@ -75,44 +109,39 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    Alert.prompt(
-      'Reset Password',
-      'Enter your email address to receive a password reset link',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Send',
-          onPress: async (inputEmail) => {
-            const emailToUse = inputEmail || email;
-            if (!emailToUse || !emailToUse.includes('@')) {
-              Alert.alert('Error', 'Please enter a valid email address');
-              return;
-            }
+    setResetEmail(email);
+    setShowResetModal(true);
+  };
 
-            try {
-              await resetPassword(emailToUse);
-              Alert.alert(
-                'Success',
-                'Password reset email sent! Check your inbox.',
-                [{ text: 'OK' }],
-              );
-            } catch (error: any) {
-              Alert.alert(
-                'Error',
-                error.message ||
-                  'Failed to send reset email. Please check the email address.',
-                [{ text: 'OK' }],
-              );
-            }
-          },
-        },
-      ],
-      'plain-text',
-      email,
-    );
+  const handleSendResetEmail = async () => {
+    const emailValidation = validateEmail(resetEmail);
+
+    if (!emailValidation.isValid) {
+      Alert.alert(
+        'Error',
+        emailValidation.error || 'Please enter a valid email address'
+      );
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      await resetPassword(resetEmail);
+      setShowResetModal(false);
+      Alert.alert('Success', 'Password reset email sent! Check your inbox.', [
+        { text: 'OK' },
+      ]);
+      setResetEmail('');
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.message ||
+          'Failed to send reset email. Please check the email address.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   return (
@@ -134,26 +163,49 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, emailError ? styles.inputError : null]}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}
                 placeholder='your@email.com'
                 keyboardType='email-address'
                 autoCapitalize='none'
                 autoComplete='email'
+                returnKeyType='next'
+                accessibilityLabel='Email input'
               />
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder='••••••••'
-                secureTextEntry
-                autoCapitalize='none'
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder='••••••••'
+                  secureTextEntry={!showPassword}
+                  autoCapitalize='none'
+                  returnKeyType='go'
+                  onSubmitEditing={handleLogin}
+                  accessibilityLabel='Password input'
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={
+                    showPassword ? 'Hide password' : 'Show password'
+                  }
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={24}
+                    color='#999'
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <TouchableOpacity
@@ -204,6 +256,58 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Password Reset Modal - Cross-platform compatible */}
+      <Modal
+        visible={showResetModal}
+        transparent={true}
+        animationType='fade'
+        onRequestClose={() => setShowResetModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reset Password</Text>
+            <Text style={styles.modalSubtitle}>
+              Enter your email address to receive a password reset link
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              value={resetEmail}
+              onChangeText={setResetEmail}
+              placeholder='your@email.com'
+              keyboardType='email-address'
+              autoCapitalize='none'
+              autoFocus={true}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => {
+                  setShowResetModal(false);
+                  setResetEmail('');
+                }}
+                disabled={resetLoading}
+              >
+                <Text style={styles.modalButtonTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSend]}
+                onPress={handleSendResetEmail}
+                disabled={resetLoading}
+              >
+                {resetLoading ? (
+                  <ActivityIndicator color='#fff' />
+                ) : (
+                  <Text style={styles.modalButtonTextSend}>Send</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -260,6 +364,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#F9F9F9',
   },
+  inputError: {
+    borderColor: '#FF6B6B',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    zIndex: 1,
+  },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 20,
@@ -315,5 +439,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    backgroundColor: '#F9F9F9',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  modalButtonCancel: {
+    backgroundColor: '#F5F5F5',
+  },
+  modalButtonSend: {
+    backgroundColor: '#2196F3',
+  },
+  modalButtonTextCancel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalButtonTextSend: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

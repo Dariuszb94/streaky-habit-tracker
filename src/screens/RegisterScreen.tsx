@@ -9,12 +9,27 @@ import {
   Platform,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  Keyboard,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../components';
 import { useAuth } from '../hooks/useAuth';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordMatch,
+} from '../utils/validation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../types';
+
+type RegisterScreenNavigationProp = StackNavigationProp<
+  AuthStackParamList,
+  'Register'
+>;
 
 interface RegisterScreenProps {
-  navigation: any;
+  navigation: RegisterScreenNavigationProp;
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({
@@ -23,30 +38,71 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const { register, loading } = useAuth();
 
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (emailError) {
+      setEmailError('');
+    }
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (passwordError) {
+      setPasswordError('');
+    }
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    if (confirmPasswordError) {
+      setConfirmPasswordError('');
+    }
+  };
+
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+    // Validate all fields
+    const emailValidation = validateEmail(email);
+    const passwordValidation = validatePassword(password);
+    const passwordMatchValidation = validatePasswordMatch(
+      password,
+      confirmPassword
+    );
+
+    let hasError = false;
+
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error || '');
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.error || '');
+      hasError = true;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (!passwordMatchValidation.isValid) {
+      setConfirmPasswordError(passwordMatchValidation.error || '');
+      hasError = true;
+    }
+
+    if (hasError) {
       return;
     }
 
     try {
+      Keyboard.dismiss();
       await register(email, password);
     } catch (error: any) {
       Alert.alert(
         'Registration Failed',
-        error.message || 'Could not create account',
+        error.message || 'Could not create account'
       );
     }
   };
@@ -72,38 +128,92 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, emailError ? styles.inputError : null]}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}
                 placeholder='your@email.com'
                 keyboardType='email-address'
                 autoCapitalize='none'
                 autoComplete='email'
+                returnKeyType='next'
+                accessibilityLabel='Email input'
               />
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder='••••••••'
-                secureTextEntry
-                autoCapitalize='none'
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.passwordInput,
+                    passwordError ? styles.inputError : null,
+                  ]}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  placeholder='••••••••'
+                  secureTextEntry={!showPassword}
+                  autoCapitalize='none'
+                  returnKeyType='next'
+                  accessibilityLabel='Password input'
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={
+                    showPassword ? 'Hide password' : 'Show password'
+                  }
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={24}
+                    color='#999'
+                  />
+                </TouchableOpacity>
+              </View>
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={styles.input}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder='••••••••'
-                secureTextEntry
-                autoCapitalize='none'
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.passwordInput,
+                    confirmPasswordError ? styles.inputError : null,
+                  ]}
+                  value={confirmPassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  placeholder='••••••••'
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize='none'
+                  returnKeyType='go'
+                  onSubmitEditing={handleRegister}
+                  accessibilityLabel='Confirm password input'
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  accessibilityLabel={
+                    showConfirmPassword ? 'Hide password' : 'Show password'
+                  }
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? 'eye-off' : 'eye'}
+                    size={24}
+                    color='#999'
+                  />
+                </TouchableOpacity>
+              </View>
+              {confirmPasswordError ? (
+                <Text style={styles.errorText}>{confirmPasswordError}</Text>
+              ) : null}
             </View>
 
             <Button
@@ -179,6 +289,26 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#F9F9F9',
+  },
+  inputError: {
+    borderColor: '#FF6B6B',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    zIndex: 1,
   },
   footer: {
     marginTop: 24,
