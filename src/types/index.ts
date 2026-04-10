@@ -52,6 +52,11 @@ export type AuthStackParamList = {
   Register: undefined;
 };
 
+export type AuthStackScreenProps<T extends keyof AuthStackParamList> = {
+  navigation: any; // Will be properly typed by @react-navigation
+  route: { params: AuthStackParamList[T] };
+};
+
 export type MainTabParamList = {
   Home: undefined;
   Stats: undefined;
