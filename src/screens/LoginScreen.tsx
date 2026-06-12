@@ -152,7 +152,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Ionicons name="flame" size={60} color="#FF6B6B" style={styles.icon} />
+            <Ionicons
+              name='flame'
+              size={60}
+              color='#FF6B6B'
+              style={styles.icon}
+            />
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Log in to continue your streaks</Text>
           </View>
