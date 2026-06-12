@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,19 +8,27 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { StatCard, Button, Loading } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { useStats } from '../hooks/useStats';
+import { ProfileStackParamList } from '../types';
+
+type ProfileScreenNavigationProp = StackNavigationProp<
+  ProfileStackParamList,
+  'ProfileScreen'
+>;
 
 interface ProfileScreenProps {
-  navigation: any;
+  navigation: ProfileScreenNavigationProp;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
   const { user, logout } = useAuth();
   const { stats, loading } = useStats(user?.uid);
 
-  const handleLogout = () => {
+  // Memoize logout handler to prevent unnecessary function creation
+  const handleLogout = useCallback(() => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -29,13 +37,47 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
         onPress: async () => {
           try {
             await logout();
-          } catch (error) {
-            Alert.alert('Error', 'Failed to log out');
+
+            // Success feedback
+            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+              const {
+                notificationAsync,
+                NotificationFeedbackType,
+              } = require('expo-haptics');
+              notificationAsync(NotificationFeedbackType.Success);
+            }
+          } catch (error: any) {
+            // Error feedback
+            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+              const {
+                notificationAsync,
+                NotificationFeedbackType,
+              } = require('expo-haptics');
+              notificationAsync(NotificationFeedbackType.Error);
+            }
+
+            Alert.alert(
+              'Unable to Log Out',
+              error.message || 'Something went wrong. Please try again.',
+              [{ text: 'OK' }]
+            );
           }
         },
       },
     ]);
-  };
+  }, [logout]);
+
+  // Memoize stats values to prevent unnecessary recalculations
+  const level = useMemo(() => stats?.level || 0, [stats?.level]);
+  const xp = useMemo(() => stats?.xp || 0, [stats?.xp]);
+  const longestStreak = useMemo(
+    () => stats?.longestStreak || 0,
+    [stats?.longestStreak]
+  );
+  const totalCompletions = useMemo(
+    () => stats?.totalHabitsCompleted || 0,
+    [stats?.totalHabitsCompleted]
+  );
 
   if (loading) {
     return <Loading />;
@@ -61,8 +103,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
           <Text style={styles.levelEmoji} allowFontScaling={false}>
             ⭐
           </Text>
-          <Text style={styles.levelNumber}>Level {stats?.level || 0}</Text>
-          <Text style={styles.xpText}>{stats?.xp || 0} XP</Text>
+          <Text style={styles.levelNumber}>Level {level}</Text>
+          <Text style={styles.xpText}>{xp} XP</Text>
         </View>
 
         <View style={styles.section}>
@@ -71,21 +113,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = () => {
           <StatCard
             icon='🔥'
             label='Longest Streak'
-            value={`${stats?.longestStreak || 0} days`}
+            value={`${longestStreak} days`}
             color='#F57C00'
           />
 
           <StatCard
             icon='✅'
             label='Total Completions'
-            value={stats?.totalHabitsCompleted || 0}
+            value={totalCompletions}
             color='#4CAF50'
           />
 
           <StatCard
             icon='⚡'
             label='Total XP Earned'
-            value={stats?.xp || 0}
+            value={xp}
             color='#FFA726'
           />
         </View>

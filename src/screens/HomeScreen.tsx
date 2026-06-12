@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   FlatList,
   RefreshControl,
   Platform,
+  Alert,
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { HabitCard, ProgressBar, Loading } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { useHabits } from '../hooks/useHabits';
@@ -15,9 +17,15 @@ import { useStats } from '../hooks/useStats';
 import { useMultipleCompletions } from '../hooks/useCompletions';
 import { calculateStreak } from '../utils/streakCalculator';
 import { toggleHabitCompletion } from '../services/completionService';
+import { HomeStackParamList } from '../types';
+
+type HomeScreenNavigationProp = StackNavigationProp<
+  HomeStackParamList,
+  'HomeScreen'
+>;
 
 interface HomeScreenProps {
-  navigation: any;
+  navigation: HomeScreenNavigationProp;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
@@ -28,7 +36,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     refreshHabits,
   } = useHabits(user?.uid);
   const { stats, xpProgress, refreshStats } = useStats(user?.uid);
-  const habitIds = habits.map((h) => h.id);
+
+  // Memoize habitIds to prevent unnecessary recalculations
+  const habitIds = useMemo(() => habits.map(h => h.id), [habits]);
+
   const {
     completionsMap,
     loading: completionsLoading,
@@ -37,17 +48,46 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const onRefresh = async () => {
+  // Memoize refresh callback to prevent unnecessary function creation
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([refreshHabits(), refreshStats(), refreshCompletions()]);
     setRefreshing(false);
-  };
+  }, [refreshHabits, refreshStats, refreshCompletions]);
 
-  const handleToggleHabit = async (habitId: string) => {
-    await toggleHabitCompletion(habitId);
-    await refreshCompletions();
-    await refreshStats();
-  };
+  // Memoize toggle handler to prevent unnecessary function creation
+  const handleToggleHabit = useCallback(
+    async (habitId: string) => {
+      try {
+        await toggleHabitCompletion(habitId);
+        await refreshCompletions();
+        await refreshStats();
+        // Provide success feedback
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          const { impactAsync, ImpactFeedbackStyle } = require('expo-haptics');
+          impactAsync(ImpactFeedbackStyle.Heavy);
+        }
+      } catch (error: any) {
+        Alert.alert(
+          'Error',
+          error.message || 'Failed to update habit. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    },
+    [refreshCompletions, refreshStats]
+  );
+
+  // Memoize today's date string to avoid recalculating on every render
+  const dateString = useMemo(
+    () =>
+      new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      }),
+    []
+  );
 
   if (habitsLoading || completionsLoading) {
     return <Loading />;
@@ -58,13 +98,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Today's Habits</Text>
-          <Text style={styles.date}>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </Text>
+          <Text style={styles.date}>{dateString}</Text>
         </View>
       </View>
 
@@ -85,7 +119,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       )}
 
       {habits.length === 0 ? (
-        <View style={styles.emptyState}>
+        <View
+          style={styles.emptyState}
+          accessibilityLabel='No habits created yet'
+          accessibilityRole='text'
+        >
           <Text style={styles.emptyEmoji} allowFontScaling={false}>
             🎯
           </Text>
@@ -97,7 +135,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ) : (
         <FlatList
           data={habits}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -106,9 +144,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             const completions = completionsMap[item.id] || [];
             const streakData = calculateStreak(completions);
             const isCompleted = completions.some(
-              (c) =>
-                c.date === new Date().toISOString().split('T')[0] &&
-                c.completed,
+              c =>
+                c.date === new Date().toISOString().split('T')[0] && c.completed
             );
 
             return (

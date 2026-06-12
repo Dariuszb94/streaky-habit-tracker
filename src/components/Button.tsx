@@ -4,7 +4,9 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 interface ButtonProps {
   title: string;
@@ -13,6 +15,8 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,6 +26,8 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   fullWidth = false,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   const getButtonStyle = () => {
     if (disabled) return [styles.button, styles.buttonDisabled];
@@ -44,13 +50,24 @@ export const Button: React.FC<ButtonProps> = ({
         return [styles.text, styles.textPrimary];
     }
   };
+  const handlePress = () => {
+    // Provide haptic feedback on button press
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress();
+  };
 
   return (
     <TouchableOpacity
       style={[...getButtonStyle(), fullWidth && styles.fullWidth]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       activeOpacity={0.8}
+      accessibilityRole='button'
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'outline' ? '#2196F3' : '#fff'} />

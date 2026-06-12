@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,24 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { Loading, Button } from '../components';
 import { useCompletions } from '../hooks/useCompletions';
 import { getHabitById, deleteHabit } from '../services/habitService';
-import { Habit } from '../types';
+import { Habit, HomeStackParamList } from '../types';
 import { getLastNDays } from '../utils/dateHelpers';
 
+type HabitDetailNavigationProp = StackNavigationProp<
+  HomeStackParamList,
+  'HabitDetail'
+>;
+
+type HabitDetailRouteProp = RouteProp<HomeStackParamList, 'HabitDetail'>;
+
 interface HabitDetailScreenProps {
-  route: any;
-  navigation: any;
+  route: HabitDetailRouteProp;
+  navigation: HabitDetailNavigationProp;
 }
 
 export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
@@ -30,7 +39,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
 
   const { completions, streak, refreshCompletions } = useCompletions(
     habitId,
-    habit?.userId,
+    habit?.userId
   );
 
   useEffect(() => {
@@ -41,18 +50,23 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
     try {
       const habitData = await getHabitById(habitId);
       setHabit(habitData);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load habit details');
+    } catch (error: any) {
+      Alert.alert(
+        'Error Loading Habit',
+        error.message || 'Unable to load habit details. Please try again.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
       navigation.goBack();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = () => {
+  // Memoize delete handler to prevent unnecessary function creation
+  const handleDelete = useCallback(() => {
     Alert.alert(
       'Delete Habit',
-      'Are you sure you want to delete this habit? This action cannot be undone.',
+      'Are you sure you want to delete this habit? All progress and history will be permanently lost.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -61,28 +75,56 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
           onPress: async () => {
             try {
               await deleteHabit(habitId);
+
+              // Success feedback with haptic
+              if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                const {
+                  notificationAsync,
+                  NotificationFeedbackType,
+                } = require('expo-haptics');
+                notificationAsync(NotificationFeedbackType.Success);
+              }
+
               navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete habit');
+            } catch (error: any) {
+              // Error feedback with haptic
+              if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                const {
+                  notificationAsync,
+                  NotificationFeedbackType,
+                } = require('expo-haptics');
+                notificationAsync(NotificationFeedbackType.Error);
+              }
+
+              Alert.alert(
+                'Unable to Delete',
+                error.message || 'Failed to delete habit. Please try again.',
+                [{ text: 'OK' }]
+              );
             }
           },
         },
-      ],
+      ]
     );
-  };
+  }, [habitId, navigation]);
+
+  // Memoize dates and completion data to prevent unnecessary recalculations
+  const last7Days = useMemo(() => getLastNDays(7), []);
+  const completionMap = useMemo(
+    () =>
+      completions.reduce(
+        (acc, c) => {
+          acc[c.date] = c.completed;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      ),
+    [completions]
+  );
 
   if (loading || !habit) {
     return <Loading />;
   }
-
-  const last7Days = getLastNDays(7);
-  const completionMap = completions.reduce(
-    (acc, c) => {
-      acc[c.date] = c.completed;
-      return acc;
-    },
-    {} as Record<string, boolean>,
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,7 +151,7 @@ export const HabitDetailScreen: React.FC<HabitDetailScreenProps> = ({
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>
-              {completions.filter((c) => c.completed).length}
+              {completions.filter(c => c.completed).length}
             </Text>
             <Text style={styles.statLabel}>Total Completions</Text>
           </View>

@@ -69,6 +69,18 @@ export type HomeStackParamList = {
   HabitDetail: { habitId: string };
 };
 
+export type ProfileStackParamList = {
+  ProfileScreen: undefined;
+};
+
+export type AddHabitStackParamList = {
+  AddHabitScreen: undefined;
+};
+
+export type StatsStackParamList = {
+  StatsScreen: undefined;
+};
+
 export const HABIT_ICONS = [
   '💧',
   '📚',

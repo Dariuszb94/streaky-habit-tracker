@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Habit } from '../types';
 
 interface HabitCardProps {
@@ -23,24 +24,55 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   onToggle,
   onPress,
 }) => {
+  const handleToggle = () => {
+    // Provide haptic feedback when toggling habit completion
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    onToggle();
+  };
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole='button'
+      accessibilityLabel={`${habit.name} habit`}
+      accessibilityHint='Double tap to view habit details'
+    >
       <TouchableOpacity
         style={[styles.checkbox, isCompleted && styles.checkboxCompleted]}
-        onPress={onToggle}
+        onPress={handleToggle}
+        accessibilityRole='checkbox'
+        accessibilityState={{ checked: isCompleted }}
+        accessibilityLabel={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
       >
         {isCompleted && <Text style={styles.checkmark}>✓</Text>}
       </TouchableOpacity>
 
       <View style={styles.content}>
         <View style={styles.habitInfo}>
-          <Text style={styles.icon} allowFontScaling={false}>
+          <Text
+            style={styles.icon}
+            allowFontScaling={false}
+            accessibilityLabel={`Icon: ${habit.icon}`}
+          >
             {habit.icon}
           </Text>
-          <Text style={styles.habitName}>{habit.name}</Text>
+          <Text
+            style={styles.habitName}
+            accessibilityLabel={`Habit name: ${habit.name}`}
+          >
+            {habit.name}
+          </Text>
         </View>
 
-        <View style={styles.streakContainer}>
+        <View
+          style={styles.streakContainer}
+          accessibilityLabel={`Streak: ${streak} day${streak !== 1 ? 's' : ''}`}
+          accessibilityRole='text'
+        >
           <Text style={styles.streakEmoji} allowFontScaling={false}>
             🔥
           </Text>

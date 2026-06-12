@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,19 @@ import {
   Keyboard,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, IconPicker } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { useHabits } from '../hooks/useHabits';
-import { HABIT_ICONS } from '../types';
+import { HABIT_ICONS, AddHabitStackParamList } from '../types';
+
+type AddHabitScreenNavigationProp = StackNavigationProp<
+  AddHabitStackParamList,
+  'AddHabitScreen'
+>;
 
 interface AddHabitScreenProps {
-  navigation: any;
+  navigation: AddHabitScreenNavigationProp;
 }
 
 export const AddHabitScreen: React.FC<AddHabitScreenProps> = ({
@@ -32,15 +38,21 @@ export const AddHabitScreen: React.FC<AddHabitScreenProps> = ({
   const [reminderTime, setReminderTime] = useState<Date | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const formatTimeForDisplay = (date: Date) => {
+  // Memoize time formatter to avoid recreation on every render
+  const formatTimeForDisplay = useCallback((date: Date) => {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
-  };
+  }, []);
 
-  const handleCreate = async () => {
+  // Memoize create handler to prevent unnecessary function creation
+  const handleCreate = useCallback(async () => {
     if (!habitName.trim()) {
-      Alert.alert('Error', 'Please enter a habit name');
+      Alert.alert(
+        'Missing Information',
+        'Please enter a habit name to continue.',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -54,18 +66,49 @@ export const AddHabitScreen: React.FC<AddHabitScreenProps> = ({
           : undefined,
       });
 
-      Alert.alert('Success', 'Habit created!', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
-      ]);
+      // Success feedback with haptic
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        const {
+          notificationAsync,
+          NotificationFeedbackType,
+        } = require('expo-haptics');
+        notificationAsync(NotificationFeedbackType.Success);
+      }
+
+      Alert.alert(
+        'Success!',
+        `"${habitName.trim()}" has been created. Start building your streak!`,
+        [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
+      );
 
       // Reset form
       setHabitName('');
       setSelectedIcon(HABIT_ICONS[0]);
       setReminderTime(null);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create habit');
+    } catch (error: any) {
+      // Error feedback with haptic
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        const {
+          notificationAsync,
+          NotificationFeedbackType,
+        } = require('expo-haptics');
+        notificationAsync(NotificationFeedbackType.Error);
+      }
+
+      Alert.alert(
+        'Unable to Create Habit',
+        error.message || 'Something went wrong. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
-  };
+  }, [
+    habitName,
+    selectedIcon,
+    reminderTime,
+    createHabit,
+    formatTimeForDisplay,
+    navigation,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>
